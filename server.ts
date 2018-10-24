@@ -15,11 +15,10 @@ const getHash = () => {
 
 const fetchResource = (res, queryParams = '') => {
   const url = `${API}${res}?apikey=${key}${getHash()}${queryParams}`;
-  console.log(url);
   return fetch(url);
 };
 
-import { buildSchema, GraphQLString } from 'graphql';
+import { buildSchema, GraphQLString, isInputType } from 'graphql';
 import md5 from 'md5';
 
 // const schema = new GraphQLSchema({
@@ -41,12 +40,6 @@ const schema = buildSchema(`
     characters: [Character]
     character(id: Int): Character
   }
-  type Mutation {
-    character(id: Int, favorite: Boolean): Character
-
-    setFavouriteCharacter(id: Int): [Int]
-    setFavouriteComic(id: Int): Character
-  }
 
   type Character {
     id: ${GraphQLString}
@@ -63,13 +56,40 @@ const schema = buildSchema(`
     description: String
     favorite: Boolean
   }
+
+
+
+
+  type Mutation {
+    updateCharacter(id: Int, input: CharacterInput): Character
+    updateComic(id: Int, input: ComicInput): Comic
+
+    setFavouriteCharacter(id: Int): Character
+    setFavouriteComic(id: Int): Character
+  }
+  
+  input CharacterInput {
+    favorite: Boolean!
+  }
+
+  input ComicInput {
+    favorite: Boolean!
+  }
 `);
 
 const rootValue = {
   characters: async () => {
     const response = await fetchResource('characters');
     const data = await response.json();
-    return data.data.results;
+
+    const favres = await fetch('http://localhost:4000/favourites');
+    const favs: typeof favourites = await favres.json();
+
+    return data.data.results.map((char) => {
+      char.thumbnail = `${char.thumbnail.path}.${char.thumbnail.extension}`;
+      char.favorite = !!favourites.characters.includes(char.id);
+      return char;
+    });
   },
   character: async (...args) => {
     const { id } = args[0];
@@ -101,19 +121,19 @@ const rootValue = {
       },
     };
   },
-  setFavouriteCharacter: async ({ id }) => {
+  updateCharacter: async ({ id, input: { favorite } }) => {
     const resp: typeof favourites = await fetch(
       'http://localhost:4000/favourites',
       {
         method: 'POST',
-        body: JSON.stringify({ type: 'characters', id }),
+        body: JSON.stringify({ type: 'characters', id, favorite }),
         headers: {
           'Content-Type': 'application/json',
         },
       },
     ).then((resp) => resp.json());
-    console.log('da response', resp);
-    return resp.characters;
+
+    return rootValue.character({ id });
   },
 };
 
@@ -131,8 +151,11 @@ const favourites = {
 app.post('/favourites', (req, res) => {
   console.log('post favourites');
   const favs = req.body;
-  if (!favourites[favs.type].includes(favs.id)) {
+  if (!favourites[favs.type].includes(favs.id) && favs.favorite) {
     favourites[favs.type].push(favs.id);
+  }
+  if (favourites[favs.type].includes(favs.id) && !favs.favorite) {
+    favourites[favs.type] = favourites[favs.type].filter((x) => x !== favs.id);
   }
   res.send(favourites);
 });
@@ -142,9 +165,6 @@ app.get('/favourites', (_, res) => {
   res.send(favourites);
 });
 
-const bundler: any = new Bundler('./app/index.html');
-app.use(bundler.middleware());
-
 app.use(
   '/graphql',
   graphqlHTTP({
@@ -153,6 +173,9 @@ app.use(
     graphiql: true,
   }),
 );
+
+const bundler: any = new Bundler('./app/index.html');
+app.use(bundler.middleware());
 
 app.listen(4000, () => {
   console.log('server started at port: 4000');

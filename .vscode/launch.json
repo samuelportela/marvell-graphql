@@ -5,14 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Current TS File",
+      "name": "Launch Server",
       "type": "node",
       "request": "launch",
-      "args": ["${relativeFile}"],
+      "args": ["${workspaceRoot}/server.ts"],
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
-      "protocol": "inspector",
-  }
+      "protocol": "inspector"
+    }
   ]
 }
