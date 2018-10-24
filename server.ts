@@ -1,6 +1,7 @@
 import express from "express";
 import graphqlHTTP from "express-graphql";
 import fetch from "node-fetch";
+import bodyParser from "body-parser";
 
 const app = express();
 const API = "https://gateway.marvel.com:443/v1/public/";
@@ -38,6 +39,12 @@ const schema = buildSchema(`
   type Query {
     characters: [Character]
     character(id: Int): Character
+  }
+  type Mutation {
+    character(id: Int, favorite: Boolean): Character
+
+    setFavouriteCharacter(id: Int): [Int]
+    setFavouriteComic(id: Int): Character
   }
 
   type Character {
@@ -92,6 +99,20 @@ const rootValue = {
         });
       }
     };
+  },
+  setFavouriteCharacter: async ({ id }) => {
+    const resp: typeof favourites = await fetch(
+      "http://localhost:4000/favourites",
+      {
+        method: "POST",
+        body: JSON.stringify({ type: "characters", id }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    ).then(resp => resp.json());
+    console.log("da response", resp);
+    return resp.characters;
   }
 };
 
@@ -99,6 +120,7 @@ app.use((req, res, next) => {
   console.log("---");
   next();
 });
+app.use(bodyParser.json());
 
 const favourites = {
   characters: [1009148],
@@ -107,8 +129,10 @@ const favourites = {
 
 app.post("/favourites", (req, res) => {
   console.log("post favourites");
-  const favs = JSON.parse(req.body);
-  favourites[favs.type].push("" + favs.id);
+  const favs = req.body;
+  if (!favourites[favs.type].includes(favs.id)) {
+    favourites[favs.type].push(favs.id);
+  }
   res.send(favourites);
 });
 
