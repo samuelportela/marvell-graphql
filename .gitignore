@@ -64,7 +64,6 @@ npm-debug.log
 # Mac
 .DS_Store
 .expo
-package-lock.json
 
 # fastlane specific
 **/fastlane/report.xml
@@ -77,3 +76,7 @@ package-lock.json
 
 # scan temporary files
 **/fastlane/test_output
+
+# parcel temp
+dist
+.cache
