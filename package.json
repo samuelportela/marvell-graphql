@@ -12,10 +12,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.3",
     "@polymer/lit-element": "^0.6.2",
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "express-graphql": "^0.6.12",
+    "fetch-with-proxy": "^1.1.0",
     "graphql": "^14.0.2",
     "md5": "^2.2.1",
     "node-fetch": "^2.2.0",
