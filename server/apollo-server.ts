@@ -5,14 +5,6 @@ import { Message } from '../app/apollo-app';
 const pubsub = new PubSub();
 
 const messages = [
-  {
-    user: 'Albert',
-    message: 'This is the first message',
-  },
-  {
-    user: 'Jeroen',
-    message: 'Great chat app!',
-  },
 ];
 
 // Type definitions define the "shape" of your data and specify
