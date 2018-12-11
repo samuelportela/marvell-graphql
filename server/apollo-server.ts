@@ -1,29 +1,14 @@
-import { ApolloServer, gql } from 'apollo-server-express';
-const { PubSub } = require('apollo-server');
+import { PubSub, ApolloServer, gql } from 'apollo-server-express';
 
 const pubsub = new PubSub();
 
-// This is a (sample) collection of books we'll be able to query
-// the GraphQL server for.  A more complete example might fetch
-// from an existing data source like a REST API or database.
-const books = [
-  {
-    title: 'Harry Potter and the Chamber of Secrets',
-    author: 'J.K. Rowling',
-  },
-  {
-    title: 'Jurassic Park',
-    author: 'Michael Crichton',
-  },
-];
-
 const messages = [
   {
-    user: 'albert',
+    user: 'Albert',
     message: 'This is the first message',
   },
   {
-    user: 'jeroen',
+    user: 'Jeroen',
     message: 'Great chat app!',
   },
 ];
@@ -39,16 +24,13 @@ const typeDefs = gql`
     user: String
     message: String
   }
-
-  type Book {
-    title: String
-    author: String
+  
+  type Mutation {
+    addMessage(user: String, message: String): Message
   }
-
-  # The "Query" type is the root of all GraphQL queries.
-  # (A "Mutation" type will be covered later on.)
+  
   type Query {
-    books: [Book]
+    messages: [Message]
   }
 `;
 
@@ -58,20 +40,15 @@ const MESSAGE_ADDED = 'POST_ADDED';
 // schema.  We'll retrieve books from the "books" array above.
 const resolvers = {
   Query: {
-    books: () => books,
+    messages: () => messages,
   },
   Subscription: {
-    postAdded: {
-      // Additional event labels can be passed to asyncIterator creation
-      subscribe: () => pubsub.asyncIterator([MESSAGE_ADDED]),
-    },
+    // https://github.com/apollographql/graphql-subscriptions
+    // Todo implement messageAdded
+    
   },
   Mutation: {
-    addPost(root: any, args: any, context: any) {
-      pubsub.publish(MESSAGE_ADDED, { messageAdded: args });
-      messages.push(args);
-      return true;
-    },
+    // Todo implement addMessage
   },
 };
 
