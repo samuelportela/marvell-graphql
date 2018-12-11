@@ -10,7 +10,7 @@ const client = new ApolloClient({
 
 const initialState = { messages: [] };
 type State = { messages: Message[] };
-type Message = { user: string; message: string };
+export type Message = { user: string; message: string };
 
 const [{ getState, setState }, onStateChange] = useProfunctor(
   new SimpleStateContainer(initialState),
@@ -41,7 +41,35 @@ const getMessages = () => {
 };
 getMessages();
 
-// Todo mutation addMessage
 // Todo subscribe to messageAdded
+const subscribeToMessages = () => {
+  return client.subscribe<Message>({
+    query: gql`
+      subscription someName {
+        messageAdded {
+          user
+          message
+        }
+      }
+    `,
+  });
+};
+
+subscribeToMessages().subscribe((newMessage) => {
+  setState((state) => {
+    console.log(newMessage);
+    if (!newMessage) state;
+    return { ...state, messages: [...state.messages, newMessage] };
+  });
+});
+
+// Todo mutation addMessage
+const addMessage = (message: Message) => {
+  client.query({
+    query: gql`
+
+  `,
+  });
+};
 
 onStateChange(() => render(appTpl(getState()), document.body));
